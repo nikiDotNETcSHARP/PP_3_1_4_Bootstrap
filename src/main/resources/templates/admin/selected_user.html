@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>User Details</title>
+</head>
+<body>
+<div>
+    <h2>User Details</h2>
+    <table>
+        <thead>
+        <tr>
+            <th>ID</th>
+            <th>Username</th>
+            <th>Password</th>
+            <th>Email</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+            <td th:text="${user.id}"></td>
+            <td th:text="${user.username}"></td>
+            <td th:text="${user.password}"></td>
+            <td th:text="${user.email}"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<br/>
+
+<a th:href="@{/admin/show/edit(id=${user.getId()})}">Edit</a>
+
+<br/>
+
+<form th:method="POST" th:action="@{/admin/show/delete(id=${user.getId()})}">
+    <input type="hidden" th:value="${user.getId()}" name="id"/>
+    <input type="submit" value="Delete"/>
+</form>
+
+<br/>
+<br/>
+<br/>
+<form th:action="@{/logout}" method="post">
+    <input type="hidden" th:name="_csrf" th:value="${_csrf.token}"/>
+    <button type="submit">Logout</button>
+</form>
+
+</body>
+</html>

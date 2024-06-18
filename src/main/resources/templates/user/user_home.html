@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User data</title>
+</head>
+<body>
+
+<div>
+    <table border="1">
+        <thead>
+        <tr>
+            <th>Id</th>
+            <th>Username</th>
+            <th>Password</th>
+            <th>Email</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="user : ${user}">
+            <td th:text="${user.getId()}"></td>
+            <td th:text="${user.getUsername()}"></td>
+            <td th:text="${user.getPassword()}"></td>
+            <td th:text="${user.getEmail()}"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+
+<br/>
+<br/>
+<br/>
+<form th:action="@{/logout}" method="post">
+    <input type="hidden" th:name="_csrf" th:value="${_csrf.token}"/>
+    <button type="submit">Logout</button>
+</form>
+
+</body>
+</html>
