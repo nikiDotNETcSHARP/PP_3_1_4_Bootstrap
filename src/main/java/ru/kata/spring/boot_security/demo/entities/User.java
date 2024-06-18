@@ -20,6 +20,9 @@ public class User {
     @Column(name = "password")
     private String password;
 
+    @Column(name = "age")
+    private int age;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "user_role_id",
             joinColumns = @JoinColumn(name = "user_id"),
@@ -73,5 +76,13 @@ public class User {
 
     public void setAll_roles(List<Role> all_roles) {
         this.all_roles = all_roles;
+    }
+
+    public int getAge() {
+        return age;
+    }
+
+    public void setAge(int age) {
+        this.age = age;
     }
 }

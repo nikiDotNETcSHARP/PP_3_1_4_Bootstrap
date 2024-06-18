@@ -1,79 +1,72 @@
 package ru.kata.spring.boot_security.demo.controllers;
 
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 import ru.kata.spring.boot_security.demo.entities.User;
-import ru.kata.spring.boot_security.demo.services.RoleService;
+import ru.kata.spring.boot_security.demo.services.AdditionalService;
 import ru.kata.spring.boot_security.demo.services.UserService;
+import ru.kata.spring.boot_security.demo.validators.UserValidator;
 
-import java.util.List;
+import javax.validation.Valid;
+import java.security.Principal;
 
 @Controller
-@RequestMapping("/admin")
+@RequestMapping("/users")
 public class AdminController {
-    private UserService userService;
-    private RoleService roleService;
+    private final UserService userService;
+    private final AdditionalService additionalService;
+    private final UserValidator userValidator;
 
     @Autowired
-    public void setUserService(UserService userService, RoleService roleService) {
-        this.roleService = roleService;
+    public AdminController(UserService userService,
+                           AdditionalService additionalService,
+                           UserValidator userValidator) {
         this.userService = userService;
+        this.additionalService = additionalService;
+        this.userValidator = userValidator;
     }
 
-    @GetMapping()
-    public String getAllUsers(Model model) {
-        model.addAttribute("all_users", userService.getAllUsers());
-        return "admin/admin_home";
+    @GetMapping("/admin")
+    public String showAllUsers(Model model, Principal principal) {
+        model.addAttribute("newUser", new User());
+        additionalService.createModelForView(model, principal);
+        model.addAttribute("activeTab", "usersTable");
+        return "adminPage";
     }
 
-    @GetMapping("/new")
-    public String showNewUserForm(Model model) {
-        model.addAttribute("user", new User());
-        model.addAttribute("allRoles", roleService.findAll());
-        return "admin/add_user";
-    }
-
-    @PostMapping()
-    public String addUser(@ModelAttribute("newUser") User newUser,
-                          @RequestParam("roles") List<String> roles) {
-        if (roles.contains("ROLE_USER")) {
-            newUser.setAll_roles(roleService.getRole("ROLE_USER"));
+    @PostMapping("/admin")
+    public String addUser(@ModelAttribute("newUser") @Valid User user, BindingResult bindingResult,
+                          Principal principal, Model model) {
+        userValidator.validate(user, bindingResult);
+        if (bindingResult.hasErrors()) {
+            additionalService.createModelForView(model, principal);
+            model.addAttribute("activeTab", "addUser");
+            return "adminPage";
         }
-        if (roles.contains("ROLE_ADMIN")) {
-            newUser.setAll_roles(roleService.getRole("ROLE_ADMIN"));
-        }
-        userService.saveUser(newUser);
-        return "redirect:/admin";
+        userService.saveUser(user);
+        return "redirect:/users/admin";
     }
 
-    @GetMapping("/show")
-    public String showUserById(@RequestParam("id") int id, Model model) {
-        User user = userService.showUserById(id);
-        if (user == null) {
-            return "redirect:/admin";
-        } else {
-            model.addAttribute("user", user);
-            return "admin/selected_user";
+    @PatchMapping("/admin")
+    public String updateUser(@ModelAttribute("userIter") @Valid User user,
+                             BindingResult bindingResult,
+                             Model model, Principal principal) {
+        model.addAttribute("authUser", userService.findByUsername(principal.getName()));
+        if (bindingResult.hasErrors()) {
+            return "adminPage";
         }
+        userService.updateUser(user);
+        return "redirect:/users/admin";
     }
 
-    @GetMapping("/show/edit")
-    public String editUser(Model model, @RequestParam("id") int id) {
+    @DeleteMapping("/admin")
+    public String deleteUser(Model model, @RequestParam("id") int id) {
         model.addAttribute("user", userService.showUserById(id));
-        return "admin/edit_user";
-    }
-
-    @PostMapping("/update")
-    public String updateUser(@ModelAttribute("user") User user, @RequestParam("id") int id) {
-        userService.updateUserById(id, user);
-        return "redirect:/admin";
-    }
-
-    @PostMapping("/show/delete")
-    public String deleteUser(@RequestParam("id") int id) {
-        userService.removeUserById(id);
-        return "redirect:/admin";
+        userService.deleteById(id);
+        return "redirect:/users/admin";
     }
 }
